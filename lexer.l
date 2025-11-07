@@ -52,6 +52,9 @@ STRING  \"([^\\\"]|\\.)*\"
 "="                 { return '='; }
 "+"                 { return '+'; }
 ";"                 { return ';'; }
+"-"                 { return '-'; } 
+"*"                 { return '*'; }  
+"/"                 { return '/'; } 
 
 {INT}               { yylval.ival = std::atoi(yytext); return NUMBER; }
 {STRING}            { yylval.sval = unescape_and_unquote(yytext); return STRINGLIT; }

@@ -156,6 +156,13 @@ expr
     }
   | expr '+' expr
     { $$ = $1 + $3; g_lastExprWasNonIntIdent = false; g_lastExprRaw.clear(); }
+      | expr '-' expr
+    { $$ = $1 - $3; g_lastExprWasNonIntIdent = false; g_lastExprRaw.clear(); }
+  | expr '*' expr
+    { $$ = $1 * $3; g_lastExprWasNonIntIdent = false; g_lastExprRaw.clear(); }
+  | expr '/' expr
+    { $$ = $1 / $3; g_lastExprWasNonIntIdent = false; g_lastExprRaw.clear(); }
+  ;
   ;
 
 %%
