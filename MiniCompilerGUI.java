@@ -47,7 +47,11 @@ public class MiniCompilerGUI extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
 
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
+        // Apply a dark, modernized Nimbus look without external dependencies
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception ignored) {}
+        applyDarkTheme();
 
         setLayout(new BorderLayout());
         createMenuBar();
@@ -55,16 +59,18 @@ public class MiniCompilerGUI extends JFrame {
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         split.setResizeWeight(0.6);
-        split.setBorder(new CompoundBorder(new EmptyBorder(5, 5, 5, 5), new LineBorder(new Color(200, 200, 200), 1)));
+        split.setBorder(new CompoundBorder(new EmptyBorder(5, 5, 5, 5), new LineBorder(new Color(60, 60, 60), 1)));
         split.setDividerSize(8);
         add(split, BorderLayout.CENTER);
 
         setupCodeEditor();
         JScrollPane codeScroll = new JScrollPane(codeArea);
+        codeScroll.setRowHeaderView(new LineNumberView(codeArea));
+        codeScroll.getViewport().setBackground(new Color(30, 30, 30));
         codeScroll.setBorder(new CompoundBorder(
-                new TitledBorder(new LineBorder(new Color(100, 149, 237), 2), "Code Editor",
-                        TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 12)),
-                new EmptyBorder(5, 5, 5, 5)));
+                new TitledBorder(new LineBorder(new Color(70, 70, 70), 1), "Code Editor",
+                        TitledBorder.LEFT, TitledBorder.TOP, new Font("Segoe UI", Font.BOLD, 12)),
+                new EmptyBorder(6, 6, 6, 6)));
         split.setLeftComponent(codeScroll);
 
         JPanel right = new JPanel(new BorderLayout(10, 10));
@@ -74,35 +80,44 @@ public class MiniCompilerGUI extends JFrame {
         JPanel top = new JPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setBorder(new CompoundBorder(
-                new TitledBorder(new LineBorder(new Color(34, 139, 34), 2), "Controls",
-                        TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 12)),
+                new TitledBorder(new LineBorder(new Color(70, 70, 70), 1), "Controls",
+                        TitledBorder.LEFT, TitledBorder.TOP, new Font("Segoe UI", Font.BOLD, 12)),
                 new EmptyBorder(10, 10, 10, 10)));
 
         JPanel row1 = new JPanel(new BorderLayout(8, 8));
-        row1.add(new JLabel("Choose Test Case:"), BorderLayout.WEST);
-        tests.setPreferredSize(new Dimension(200, 25));
+        JLabel testLbl = new JLabel("Choose Test Case:");
+        testLbl.setForeground(new Color(210, 210, 210));
+        row1.add(testLbl, BorderLayout.WEST);
+        tests.setPreferredSize(new Dimension(20, 15));
         row1.add(tests, BorderLayout.CENTER);
         top.add(row1);
         top.add(Box.createVerticalStrut(15));
 
         JPanel row3 = new JPanel(new BorderLayout(8, 8));
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        JButton runBtn = createStyledButton("Run", new Color(34, 139, 34));
-        JButton clearBtn = createStyledButton("Clear", new Color(220, 20, 60));
+        JButton runBtn = createStyledButton("Run", new Color(46, 160, 67));
+        JButton clearBtn = createStyledButton("Clear", new Color(184, 62, 62));
+        runBtn.setToolTipText("Run program (F5)");
+        clearBtn.setToolTipText("Clear output");
         buttonPanel.add(runBtn);
         buttonPanel.add(clearBtn);
         row3.add(buttonPanel, BorderLayout.NORTH);
         row3.add(inputPanel, BorderLayout.CENTER);
         top.add(row3);
-        right.add(top, BorderLayout.NORTH);
+        // We'll place controls and output into a vertical split for better balance
 
         setupOutputArea();
         JScrollPane outScroll = new JScrollPane(outputArea);
+        outScroll.getViewport().setBackground(new Color(35, 35, 35));
         outScroll.setBorder(new CompoundBorder(
-                new TitledBorder(new LineBorder(new Color(255, 140, 0), 2), "Program Output",
-                        TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 12)),
-                new EmptyBorder(5, 5, 5, 5)));
-        right.add(outScroll, BorderLayout.CENTER);
+                new TitledBorder(new LineBorder(new Color(70, 70, 70), 1), "Program Output",
+                        TitledBorder.LEFT, TitledBorder.TOP, new Font("Segoe UI", Font.BOLD, 12)),
+                new EmptyBorder(6, 6, 6, 6)));
+        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, outScroll);
+        rightSplit.setResizeWeight(0.35); // allocate ~35% for controls/input, 65% for output
+        rightSplit.setDividerSize(8);
+        rightSplit.setBorder(new LineBorder(new Color(60, 60, 60), 1));
+        right.add(rightSplit, BorderLayout.CENTER);
 
         add(createStatusBar(), BorderLayout.SOUTH);
 
@@ -114,16 +129,31 @@ public class MiniCompilerGUI extends JFrame {
         applySelection();
     }
 
+    private void applyDarkTheme() {
+        ThemeUtil.applyDefaultDarkNimbusColors();
+        getContentPane().setBackground(new Color(28, 28, 28));
+    }
+
     private void setupCodeEditor() {
         codeArea.setFont(new Font("Consolas", Font.PLAIN, 14));
-        codeArea.setBackground(new Color(248, 248, 255));
-        codeArea.setBorder(new EmptyBorder(5, 5, 5, 5));
+        codeArea.setBackground(new Color(30, 30, 30));
+        codeArea.setForeground(new Color(220, 220, 220));
+        codeArea.setCaretColor(new Color(230, 230, 230));
+        codeArea.setSelectionColor(new Color(75, 110, 175));
+        codeArea.setBorder(new EmptyBorder(6, 6, 6, 6));
         codeArea.setLineWrap(false);
         codeArea.setTabSize(4);
 
-        inputPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        inputPanel.add(new JLabel("Input: "), BorderLayout.WEST);
+        inputPanel.setBackground(new Color(28, 28, 28));
+        inputPanel.setBorder(new EmptyBorder(6, 6, 6, 6));
+        JLabel inputLbl = new JLabel("Input: ");
+        inputLbl.setForeground(new Color(210, 210, 210));
+        inputPanel.add(inputLbl, BorderLayout.WEST);
         inputField.setDocument(new JTextFieldLimit(20, false)); // allow all input
+        inputField.setBackground(new Color(38, 38, 38));
+        inputField.setForeground(new Color(230, 230, 230));
+        inputField.setCaretColor(new Color(230, 230, 230));
+        inputField.setBorder(new CompoundBorder(new LineBorder(new Color(60, 60, 60), 1), new EmptyBorder(4, 6, 4, 6)));
         inputPanel.add(inputField, BorderLayout.CENTER);
         inputPanel.setVisible(false);
 
@@ -140,19 +170,21 @@ public class MiniCompilerGUI extends JFrame {
     private void setupOutputArea() {
         outputArea.setEditable(false);
         outputArea.setFont(new Font("Consolas", Font.PLAIN, 12));
-        outputArea.setBackground(new Color(240, 240, 240));
-        outputArea.setBorder(new EmptyBorder(5, 5, 5, 5));
+        outputArea.setBackground(new Color(35, 35, 35));
+        outputArea.setForeground(new Color(220, 220, 220));
+        outputArea.setCaretColor(new Color(230, 230, 230));
+        outputArea.setBorder(new EmptyBorder(6, 6, 6, 6));
     }
 
     private JButton createStyledButton(String text, Color color) {
         JButton b = new JButton(text);
-        b.setFont(new Font("Arial", Font.BOLD, 11));
+        b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBackground(color);
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
-        b.setBorderPainted(false);
+        b.setBorder(new CompoundBorder(new LineBorder(color.darker(), 1, true), new EmptyBorder(6, 12, 6, 12)));
         b.setOpaque(true);
-        b.setPreferredSize(new Dimension(80, 30));
+        b.setPreferredSize(new Dimension(96, 32));
         b.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent e) { b.setBackground(color.darker()); }
             public void mouseExited(java.awt.event.MouseEvent e) { b.setBackground(color); }
@@ -161,50 +193,33 @@ public class MiniCompilerGUI extends JFrame {
     }
 
     private void createMenuBar() {
-        JMenuBar mb = new JMenuBar();
-        JMenu file = new JMenu("File");
-        JMenuItem n = new JMenuItem("New");
-        JMenuItem q = new JMenuItem("Exit");
-        n.addActionListener(e -> { codeArea.setText(""); outputArea.setText(""); updateStatus("New file"); });
-        q.addActionListener(e -> System.exit(0));
-        file.add(n); file.addSeparator(); file.add(q);
-
-        JMenu run = new JMenu("Run");
-        JMenuItem r = new JMenuItem("Run Program (F5)");
-        r.addActionListener(this::runProgram);
-        run.add(r);
-
-        JMenu help = new JMenu("Help");
-        JMenuItem about = new JMenuItem("About");
-        about.addActionListener(this::showAbout);
-        JMenuItem keys = new JMenuItem("Keyboard Shortcuts");
-        keys.addActionListener(this::showShortcuts);
-        help.add(about); help.add(keys);
-
-        mb.add(file); mb.add(run); mb.add(help);
-        setJMenuBar(mb);
+        // Remove menu bar as requested
+        setJMenuBar(null);
     }
 
     private void createToolbar() {
         JToolBar tb = new JToolBar();
         tb.setFloatable(false);
-        tb.setBorder(new EmptyBorder(2, 2, 2, 2));
-        JButton runBtn = createStyledButton("Run", new Color(34, 139, 34));
-        JButton clearBtn = createStyledButton("Clear", new Color(220, 20, 60));
-        runBtn.addActionListener(this::runProgram);
-        clearBtn.addActionListener(e -> { outputArea.setText(""); updateStatus("Output cleared"); });
-        tb.add(runBtn);
-        tb.add(clearBtn);
+        tb.setBorder(new CompoundBorder(new LineBorder(new Color(60, 60, 60), 1), new EmptyBorder(2, 6, 2, 6)));
+        tb.setBackground(new Color(32, 32, 32));
+        JLabel title = new JLabel("C++ Mini Compiler");
+        title.setForeground(new Color(230, 230, 230));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        tb.setLayout(new BorderLayout());
+        tb.add(title, BorderLayout.WEST);
         add(tb, BorderLayout.NORTH);
     }
 
     private JPanel createStatusBar() {
         JPanel sb = new JPanel(new BorderLayout());
-        sb.setBorder(new CompoundBorder(new EmptyBorder(2, 5, 2, 5), new LineBorder(new Color(200, 200, 200), 1)));
-        sb.setBackground(new Color(240, 240, 240));
+        sb.setBorder(new CompoundBorder(new EmptyBorder(2, 5, 2, 5), new LineBorder(new Color(60, 60, 60), 1)));
+        sb.setBackground(new Color(28, 28, 28));
         progressBar.setPreferredSize(new Dimension(150, 20));
         progressBar.setStringPainted(true);
         progressBar.setString("Ready");
+        progressBar.setForeground(new Color(46, 160, 67));
+        progressBar.setBackground(new Color(48, 48, 48));
+        statusLabel.setForeground(new Color(210, 210, 210));
         sb.add(statusLabel, BorderLayout.WEST);
         sb.add(progressBar, BorderLayout.EAST);
         return sb;
@@ -344,6 +359,7 @@ public class MiniCompilerGUI extends JFrame {
                 final String finalOutput = out;
                 SwingUtilities.invokeLater(() -> {
                     outputArea.setText("Program Output:\n" + finalOutput);
+                    outputArea.setCaretPosition(outputArea.getDocument().getLength());
                     updateStatus("Program executed successfully");
                     isRunning = false;
                     progressBar.setIndeterminate(false);
@@ -351,6 +367,7 @@ public class MiniCompilerGUI extends JFrame {
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> {
                     outputArea.setText("Error executing program: " + ex.getMessage());
+                    outputArea.setCaretPosition(outputArea.getDocument().getLength());
                     updateStatus("Error executing program");
                     isRunning = false;
                     progressBar.setIndeterminate(false);
@@ -363,3 +380,107 @@ public class MiniCompilerGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new MiniCompilerGUI().setVisible(true));
     }
 }
+
+// --- Theming helpers ---
+class ThemeUtil {
+    static void applyDefaultDarkNimbusColors() {
+        // Core Nimbus palette overrides
+        UIManager.put("control", new Color(32, 32, 32));
+        UIManager.put("info", new Color(40, 40, 40));
+        UIManager.put("nimbusBase", new Color(18, 18, 18));
+        UIManager.put("nimbusBlueGrey", new Color(60, 60, 60));
+        UIManager.put("nimbusLightBackground", new Color(28, 28, 28));
+        UIManager.put("text", new Color(230, 230, 230));
+        UIManager.put("nimbusSelectionBackground", new Color(75, 110, 175));
+        UIManager.put("nimbusFocus", new Color(90, 120, 190));
+
+        // General components
+        UIManager.put("Menu.background", new Color(32, 32, 32));
+        UIManager.put("MenuItem.background", new Color(32, 32, 32));
+        UIManager.put("Menu.foreground", new Color(220, 220, 220));
+        UIManager.put("MenuItem.foreground", new Color(220, 220, 220));
+        UIManager.put("Panel.background", new Color(28, 28, 28));
+        UIManager.put("ScrollPane.background", new Color(28, 28, 28));
+        UIManager.put("ToolBar.background", new Color(32, 32, 32));
+        UIManager.put("Table.background", new Color(32, 32, 32));
+        UIManager.put("Table.foreground", new Color(230, 230, 230));
+        UIManager.put("Label.foreground", new Color(220, 220, 220));
+        UIManager.put("ComboBox.background", new Color(38, 38, 38));
+        UIManager.put("ComboBox.foreground", new Color(230, 230, 230));
+        UIManager.put("TextField.background", new Color(38, 38, 38));
+        UIManager.put("TextField.foreground", new Color(230, 230, 230));
+
+        // Font: apply a saner default for a professional look
+        Font base = new Font("Segoe UI", Font.PLAIN, 13);
+        for (Object key : UIManager.getDefaults().keySet()) {
+            Object val = UIManager.get(key);
+            if (val instanceof Font) {
+                UIManager.put(key, base);
+            }
+        }
+    }
+}
+
+// --- Line number gutter for code editor ---
+class LineNumberView extends JComponent {
+    private static final int MARGIN = 6;
+    private final JTextArea textArea;
+    private final Font numberFont = new Font("Segoe UI", Font.PLAIN, 11);
+
+    LineNumberView(JTextArea textArea) {
+        this.textArea = textArea;
+        setForeground(new Color(150, 150, 150));
+        setBackground(new Color(26, 26, 26));
+        setOpaque(true);
+
+        textArea.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { repaint(); revalidate(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { repaint(); revalidate(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { repaint(); revalidate(); }
+        });
+        textArea.addCaretListener(e -> repaint());
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        int lineCount = Math.max(1, textArea.getLineCount());
+        int digits = String.valueOf(lineCount).length();
+        FontMetrics fm = getFontMetrics(numberFont);
+        int width = MARGIN * 2 + fm.charWidth('0') * digits;
+        return new Dimension(width, textArea.getHeight());
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Rectangle clip = g.getClipBounds();
+        g.setColor(getBackground());
+        g.fillRect(clip.x, clip.y, clip.width, clip.height);
+
+        g.setFont(numberFont);
+        g.setColor(getForeground());
+
+        int startOffset = textArea.viewToModel(new Point(0, clip.y));
+        int endOffset = textArea.viewToModel(new Point(0, clip.y + clip.height));
+
+        while (startOffset <= endOffset) {
+            try {
+                int line = textArea.getLineOfOffset(startOffset);
+                Rectangle r = textArea.modelToView(startOffset);
+                if (r == null) break;
+                String lineNumber = String.valueOf(line + 1);
+                int x = getPreferredSize().width - MARGIN - g.getFontMetrics().stringWidth(lineNumber);
+                int y = r.y + r.height - g.getFontMetrics().getDescent();
+                g.drawString(lineNumber, x, y);
+                startOffset = textArea.getLineEndOffset(line) + 1;
+            } catch (Exception ex) {
+                break;
+            }
+        }
+
+        // Right separator line
+        g.setColor(new Color(60, 60, 60));
+        g.drawLine(getWidth() - 1, clip.y, getWidth() - 1, clip.y + clip.height);
+    }
+}
+
